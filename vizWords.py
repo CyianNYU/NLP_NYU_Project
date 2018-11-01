@@ -21,39 +21,22 @@ import matplotlib.pyplot as plt
 plt.rcParams["xtick.labelsize"] = 7
 import seaborn as sns
 
-df = pd.read_csv('data/qaData.csv')
+with open('data/tokenizedQuestions.p', 'rb') as f:
+        ec_data = pkl.load(f)
 
-def cleanText(col):
+MAX_WORDS = 10
+
+def plotTFIDFbyVar(path, var):
     
-    texts = []
-    
-    for text in col:
-        text = re.sub("\d+", "", text)
-        text = re.sub("-", "", text)
-        text = re.sub("\-", "", text)
-        text = re.sub("--", "", text)
-        text = text.replace('’', '').replace('\'', "").replace(".", "").replace("-", "").replace("...","")
-        doc = nlp(text, disable=['parser', 'ner'])
-        tokens = [tok.lemma_.lower().strip() for tok in doc if tok.lemma_ != '-PRON-']
-        tokens = [tok for tok in tokens if tok not in stopwords and tok not in punctuations and tok not in ("hi", "-", "thank", " -", "- ", " - ", "\-", " \-", "\- ", "--")]
-        tokens = ' '.join(tokens)
+    tf_dict = {}
+
+    for v in np.unique([doc[var] for doc in ec_data]):
+        if v == "nan":
+            continue
+        v_docs = [doc['Question'] for doc in ec_data if doc[var]==v]
+        usage = Counter(x for xs in v_docs for x in xs)
+        tf_dict[v] = {u:usage[u]/np.log2(1 + usage[u]) for u in usage}
         
-        texts.append(tokens)
-    return texts
-    
-def freqPlots(path, freq_dict):
-    
-    for tag, usage in freq_dict.items():
-        fig = plt.figure(figsize=(12,6))
-        fig_plt = sns.barplot(x=list(usage.keys()), y=list(usage.values()))
-        fig_plt.set_xlabel("Word")
-        fig_plt.set_ylabel("Normalized Frequency")
-        fig_plt.set_title('Frequency Top 10 - {}'.format(tag))
-        fig_plt.get_figure().savefig("{}/{}.png".format(path, tag), bbox_inches='tight') 
-    return
-
-def tfidfPlots(path, tf_dict, max_words):
-    
     tfidf_dict = {}
 
     for doc, usage in tf_dict.items():
@@ -66,7 +49,7 @@ def tfidfPlots(path, tf_dict, max_words):
             tfidf_dict[doc][word] = value*np.log2(1 + len(tf_dict)/total_docs) 
             
     for tag, usage in tfidf_dict.items():
-        word_values = sorted(usage.items(), key=lambda kv: -kv[1])[:max_words]
+        word_values = sorted(usage.items(), key=lambda kv: -kv[1])[:MAX_WORDS]
         words = [wv[0] for wv in word_values]
         values = [wv[1] for wv in word_values]
         fig = plt.figure(figsize=(12,6))
@@ -75,31 +58,21 @@ def tfidfPlots(path, tf_dict, max_words):
         fig_plt.set_ylabel("TF-IDF Score")
         fig_plt.set_title('TF-IDF Top 10 - {}'.format(tag))
         fig_plt.get_figure().savefig("{}/{}.png".format(path, tag), bbox_inches='tight')
-    return
-
-def unigramPlots(path_count, path_tfidf, var, max_words):
-    freq_dict = {}
-    tf_dict = {}
-
-    for j,i in df.groupby(var):
-        words = ' '.join(cleanText(i["Question"])).split()
-        usage = Counter(words)
-        
-        freq_dict[j] = {u[0]:u[1]/len(words)*100 for u in usage.most_common(max_words)}
-        tf_dict[j] = {u:usage[u]/np.log2(1 + usage[u]) for u in usage}
     
-    freqPlots(path_count, freq_dict)
-    tfidfPlots(path_tfidf, tf_dict, max_words)
-    return "Success!"
+    return "Great Success"
 
 print("Visualizing Analyst Corpuses")
-unigramPlots("figures/analyst_freq", "figures/analyst_tfidf", "AnalystName", 10)
+plotTFIDFbyVar('figures/analyst_tfidf','Analyst')
 print("Visualizing Tag Corpuses")
-unigramPlots("figures/eTag_freq", "figures/eTag_tfidf", "EarningTag2", 10)
+plotTFIDFbyVar('figures/tag_tfidf','Tag')
+print("Visualizing Quarter Corpuses")
+plotTFIDFbyVar('figures/quarter_tfidf','Quarter')
 
 #################################################################################
 ###################################VIZ TAGS BY ANALYST###########################
 #################################################################################
+
+df = pd.read_csv("data/origData.csv")
 
 print("Visualizing Analyst/Tag Distributions")
 for a, a_d in df.groupby("AnalystName"):
