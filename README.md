@@ -7,5 +7,5 @@ Our Creed: What You Say And How You Say It Matters
 Project Members:
 - Yiyan Chen
 - Lu Yin
-- Xiaofan Bao
+- Xiaofan Bai
 - Isaac Haberman
