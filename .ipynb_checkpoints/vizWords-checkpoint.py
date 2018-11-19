@@ -127,3 +127,60 @@ def analystTagTfidfPlot():
 print("Visualizing Analyst/Tag TFIDF")
 analystTagTfidfPlot()
 print("Finished")
+
+#################################################################################
+###################################Quarter Area Plot##################
+#################################################################################
+
+quarter_data = orig_data.groupby(["Quarter","EarningTag2"]).size().reset_index()
+quarter_agg_data = quarter_data.merge(quarter_data.groupby('Quarter')[0].sum().reset_index(), on='Quarter')
+quarter_agg_data['QPct'] = quarter_agg_data['0_x']/quarter_agg_data['0_y']
+quarter_agg_pivot_data = quarter_agg_data.pivot(index='Quarter', columns='EarningTag2', values='QPct').reset_index()
+quarter_agg_pivot_data.rename_axis(None, axis=1, inplace=True)
+quarter_agg_pivot_data.head()
+
+
+fig = plt.figure(figsize=(30,10))
+
+plt.stackplot(quarter_agg_pivot_data['Quarter'], quarter_agg_pivot_data['AccountingAndTaxes'],
+                                                 quarter_agg_pivot_data['Awm'],
+                                                 quarter_agg_pivot_data['BalanceSheet'],
+                                                 quarter_agg_pivot_data['Capital'],
+                                                 quarter_agg_pivot_data['Cb'],
+                                                 quarter_agg_pivot_data['Ccb'],
+                                                 quarter_agg_pivot_data['Cib'],
+                                                 quarter_agg_pivot_data['CreditCosts'],
+                                                 quarter_agg_pivot_data['Expenses'],
+                                                 quarter_agg_pivot_data['Legal'],
+                                                 quarter_agg_pivot_data['MacroeconomicUpdate'],
+                                                 quarter_agg_pivot_data['OtherTopics'],
+                                                 quarter_agg_pivot_data['RegulatoryTopics'],
+                                                 quarter_agg_pivot_data['Revenue'],
+            labels=quarter_agg_pivot_data.columns.tolist()[1:], colors = plt.get_cmap('tab20c').colors)
+plt.legend(loc='upper center', fancybox=True, ncol=14)
+
+plt.savefig('figures/quarter_tag/stackedArea.png', bbox_inches='tight')
+
+
+
+quarter_data = orig_data.groupby(["Quarter","EarningTag2"]).size().reset_index()
+quarter_agg_data = quarter_data.merge(quarter_data.groupby('EarningTag2')[0].sum().reset_index(), on='EarningTag2')
+quarter_agg_data['TPct'] = quarter_agg_data['0_x']/quarter_agg_data['0_y']
+quarter_agg_pivot_data = quarter_agg_data.pivot(index='EarningTag2', columns='Quarter', values='TPct').reset_index()
+quarter_agg_pivot_data.rename_axis(None, axis=1, inplace=True)
+quarter_agg_pivot_data.head()
+
+
+fig = plt.figure(figsize=(30,10))
+
+plt.title("Quarter Percentage By Tag")
+plt.ylabel("Percentage")
+plt.xlabel("Tag")
+
+plt.stackplot(quarter_agg_pivot_data['EarningTag2'], quarter_agg_pivot_data[1],
+                                                     quarter_agg_pivot_data[2],
+                                                     quarter_agg_pivot_data[3],
+                                                     quarter_agg_pivot_data[4], labels=[1, 2, 3, 4], colors = plt.get_cmap('Paired').colors)
+plt.legend(loc='upper center', fancybox=True, ncol=14)
+
+plt.savefig('figures/quarter_tag/stackedArea_QT.png', bbox_inches='tight')

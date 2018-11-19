@@ -1,0 +1,5 @@
+cntModel_data = pd.read_csv("data/tagCntModel.csv")
+merged_data = pd.merge(indexed_data, cntModel_data, on=['EventNumber']+pd.get_dummies(pivot_melt_data['Tag'], prefix='T', prefix_sep="_").columns.tolist())
+
+train, test = merged_data.loc[~merged_data['EventNumber'].isin(test_set)].copy().reset_index(drop=True), \
+                merged_data.loc[merged_data['EventNumber'].isin(test_set)].copy().reset_index(drop=True)
