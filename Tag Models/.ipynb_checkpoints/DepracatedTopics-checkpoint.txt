@@ -1,0 +1,104 @@
+def getMatrices(var, var_dict, var_topic_cols):
+    docs = [v for k,v in var_dict.items()]
+    var_list = [{var:k, 'Words':v} for k,v in var_dict.items()]
+    
+    vec = Vectorizer(tf_type='bm25', apply_idf=True, idf_type='smooth', apply_dl=True, dl_type='linear').fit(docs)
+    doc_term_matrix = vec.transform(docs)
+    
+    model = TopicModel('nmf', n_topics=NUM_TOPICS)
+    model.fit(doc_term_matrix)
+    doc_topic_matrix = model.transform(doc_term_matrix)
+    
+    topic_dict = {}
+    
+    for doc, topic in model.top_doc_topics(doc_topic_matrix, docs=-1, top_n=-1, weights=True):
+        topic_dict[var_list[doc][var]] = {"t{}".format(k):v for k,v in topic}
+        
+    topic_df = pd.DataFrame.from_dict(topic_dict, orient='index').reset_index().fillna(0)
+    topic_df = topic_df[['index'] + topic_cols]
+    topic_df.columns = [var] + var_topic_cols
+    topic_df['EventNumber'] = i
+    
+    return topic_df, doc_topic_matrix
+    
+a_topic_list = []
+t_topic_list = []
+
+#predictions_list = []
+#sftmx_predictions_list = []
+
+analysts = q_data['AnalystName'].unique().tolist()
+tags = q_data['Tag'].unique().tolist()
+
+
+NUM_TOPICS = 5
+topic_cols = ["t{}".format(i) for i in range(NUM_TOPICS)]
+analyst_topic_cols = ["a_t{}".format(i) for i in range(NUM_TOPICS)]
+tag_topic_cols = ["t_t{}".format(i) for i in range(NUM_TOPICS)]
+
+for i in q_data['EventNumber'].unique():
+    if i == 0:
+        continue
+    
+    a_dict = {a:[] for a in analysts}
+    t_dict = {t:[] for t in tags}
+
+    for doc in q_list:
+        if doc['EventNumber'] < i:
+            a_dict[doc['AnalystName']] += doc['Question'] + ["Y"+str(doc['Year'])] + [doc['Quarter']] 
+            t_dict[doc['Tag']] += doc['Question'] + ["Y"+str(doc['Year'])] + [doc['Quarter']]
+        
+    a_df, a_doc_topic_matrix = getMatrices('AnalystName', a_dict, analyst_topic_cols)
+    a_topic_list.append(a_df)
+    t_df, t_doc_topic_matrix = getMatrices('Tag', t_dict, tag_topic_cols)
+    t_topic_list.append(t_df)
+    
+    #joint_matrix = a_doc_topic_matrix.dot(t_doc_topic_matrix.T)
+
+
+a_topic_df = pd.concat(a_topic_list)
+a_topic_df['a_tMax'] = a_topic_df[analyst_topic_cols].idxmax(axis=1)
+
+t_topic_df = pd.concat(t_topic_list)
+t_topic_df['t_tMax'] = t_topic_df[tag_topic_cols].idxmax(axis=1)
+
+
+#tag_dict = {}
+    
+#for doc, topic in tag_model.top_doc_topics(tag_doc_topic_matrix, docs=-1, top_n=-1, weights=True):
+#    tag_dict[tag_vec.grps_list[doc]] = {"t{}".format(k):v for k,v in topic}
+        
+#tag_df = pd.DataFrame.from_dict(tag_dict, orient='index').reset_index().fillna(0)
+#tag_df = tag_df[['index'] + ['t'+str(i) for i in range(NUM_TOPICS)]]
+#tag_df.columns = ["Tag"] + ['tTopic'+str(i) for i in range(NUM_TOPICS)]
+#tag_df.set_index('Tag', drop=True, inplace=True)
+
+#tag_df.idxmax(axis=1).reset_index().groupby([0]).nunique()
+
+#tag_df[['tTopic'+str(i) for i in range(NUM_TOPICS)]] = normalize(tag_df[['tTopic'+str(i) for i in range(NUM_TOPICS)]], axis=1)**2
+tag_df = tag_df.join(tag_df.idxmax(axis=1).rename("tTopicMax"))
+
+#for topic_idx, top_terms in model.top_topic_terms(tag_vec.id_to_term, topics=-1):
+#    print('topic', topic_idx, ':', '   '.join(top_terms))
+#    
+#    for topic_idx, top_docs in model.top_topic_docs(tag_doc_topic_matrix, topics=topic_idx, top_n=5, weights=True):
+#        for doc, weight in top_docs:
+#            print("\t- {}: {:.4}".format(tag_vec.grps_list[doc], weight))
+
+
+#all_poss_cols = [a + "__" +  t for a, t in product(a_topic_cols, t_topic_cols)]
+
+cols_save = ['EventNumber','Company', 'Month', 'Year', 'Quarter', 'EventType', 'Date'] + a_topic_cols + t_topic_cols
+
+pivot_data = pd.pivot_table(indexed_data, index=cols_save, columns=['aTopicMax','tTopicMax'], aggfunc='size', fill_value=0).reset_index()
+pivot_data.columns = ['__'.join(col).rstrip('__') for col in pivot_data.columns.values]
+
+missing_cols = np.setdiff1d(all_poss_cols, pivot_data.columns)
+missing_data = pd.DataFrame({m:[0] for m in missing_cols})
+pivot_data = pivot_data.join(missing_data)
+
+melt_data = pd.melt(pivot_data, id_vars=cols_save, var_name=['aTopicMax__tTopicMax'], value_name='NumQ')
+melt_data[['aTopicMax', 'tTopicMax']] = melt_data['aTopicMax__tTopicMax'].str.split("__", expand=True)
+melt_data['NumQ'] = melt_data['NumQ'].astype(bool).astype(int)
+melt_data = pd.concat([melt_data,
+                      pd.get_dummies(melt_data[['aTopicMax', 'tTopicMax']])], axis=1).reset_index(drop=True)
