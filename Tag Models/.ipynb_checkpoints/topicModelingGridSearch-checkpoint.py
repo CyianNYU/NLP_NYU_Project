@@ -94,11 +94,11 @@ analysts_vec = GroupVectorizer(tf_type='bm25', apply_idf=True, idf_type='smooth'
 analyst_doc_term_matrix = analysts_vec.transform(trigram_docs, analysts)
 
 mod = nimfa.Nmf(V=analyst_doc_term_matrix, max_iter=200, rank=5)
-nmf_grid = nimfa.Nmf.estimate_rank(mod, rank_range=np.arange(2, 15), what=['cophenetic', 'rss'], n_run=10)
+nmf_grid = nimfa.Nmf.estimate_rank(mod, rank_range=np.arange(2, 25), what=['cophenetic', 'rss'], n_run=20)
 
 
 fig = plt.figure(figsize=(8,6))
-fig_plt = sns.barplot(x=np.arange(2,15), y=[i['cophenetic'] for i in nmf_grid.values()])
+fig_plt = sns.barplot(x=np.arange(2,25), y=[i['cophenetic'] for i in nmf_grid.values()])
 fig_plt.set_xlabel("N-Components")
 fig_plt.set_ylabel("Cophenetic")
 fig_plt.set_title('Cophenetic Score vs. N-Components')
@@ -107,7 +107,7 @@ fig_plt.get_figure().savefig(figure_directory + "NMF/BM25/AnalystCophenticScores
 
 
 fig = plt.figure(figsize=(8,6))
-fig_plt = sns.barplot(x=np.arange(2,15), y=[i['rss'] for i in nmf_grid.values()])
+fig_plt = sns.barplot(x=np.arange(2,25), y=[i['rss'] for i in nmf_grid.values()])
 fig_plt.set_xlabel("N-Components")
 fig_plt.set_ylabel("RSS")
 fig_plt.set_title('RSS vs. N-Components')
@@ -124,11 +124,11 @@ tag_vec = GroupVectorizer(tf_type='bm25', apply_idf=True, idf_type='smooth', app
 tag_doc_term_matrix = tag_vec.transform(trigram_docs, tags)
 
 mod = nimfa.Nmf(V=tag_doc_term_matrix, max_iter=200, rank=5)
-nmf_grid = nimfa.Nmf.estimate_rank(mod, rank_range=np.arange(2, 14), what=['cophenetic', 'rss'], n_run=10)
+nmf_grid = nimfa.Nmf.estimate_rank(mod, rank_range=np.arange(2, 15), what=['cophenetic', 'rss'], n_run=10)
 
 
 fig = plt.figure(figsize=(8,6))
-fig_plt = sns.barplot(x=np.arange(2,14), y=[i['cophenetic'] for i in nmf_grid.values()])
+fig_plt = sns.barplot(x=np.arange(2,15), y=[i['cophenetic'] for i in nmf_grid.values()])
 fig_plt.set_xlabel("N-Components")
 fig_plt.set_ylabel("Cophenetic")
 fig_plt.set_title('Cophenetic Score vs. N-Components')
@@ -137,7 +137,7 @@ fig_plt.get_figure().savefig(figure_directory + "NMF/BM25/TagCophenticScores.png
 
 
 fig = plt.figure(figsize=(8,6))
-fig_plt = sns.barplot(x=np.arange(2,14), y=[i['rss'] for i in nmf_grid.values()])
+fig_plt = sns.barplot(x=np.arange(2,15), y=[i['rss'] for i in nmf_grid.values()])
 fig_plt.set_xlabel("N-Components")
 fig_plt.set_ylabel("RSS")
 fig_plt.set_title('RSS vs. N-Components')
@@ -185,11 +185,11 @@ analysts_vec = GroupVectorizer(tf_type='bm25', apply_idf=True, idf_type='smooth'
 analyst_doc_term_matrix = analysts_vec.transform(trigram_docs, analysts)
 
 mod = nimfa.Lsnmf(V=analyst_doc_term_matrix, max_iter=200, rank=5)
-nmf_grid = nimfa.Lsnmf.estimate_rank(mod, rank_range=np.arange(2, 15), what=['cophenetic', 'rss'], n_run=10)
+nmf_grid = nimfa.Lsnmf.estimate_rank(mod, rank_range=np.arange(2, 25), what=['cophenetic', 'rss'], n_run=10)
 
 
 fig = plt.figure(figsize=(8,6))
-fig_plt = sns.barplot(x=np.arange(2,15), y=[i['cophenetic'] for i in nmf_grid.values()])
+fig_plt = sns.barplot(x=np.arange(2,25), y=[i['cophenetic'] for i in nmf_grid.values()])
 fig_plt.set_xlabel("N-Components")
 fig_plt.set_ylabel("Cophenetic")
 fig_plt.set_title('Cophenetic Score vs. N-Components')
@@ -198,7 +198,7 @@ fig_plt.get_figure().savefig(figure_directory + "NMF/BM25/AnalystCophenticScores
 
 
 fig = plt.figure(figsize=(8,6))
-fig_plt = sns.barplot(x=np.arange(2,15), y=[i['rss'] for i in nmf_grid.values()])
+fig_plt = sns.barplot(x=np.arange(2,25), y=[i['rss'] for i in nmf_grid.values()])
 fig_plt.set_xlabel("N-Components")
 fig_plt.set_ylabel("RSS")
 fig_plt.set_title('RSS vs. N-Components')
@@ -215,11 +215,11 @@ tag_vec = GroupVectorizer(tf_type='bm25', apply_idf=True, idf_type='smooth', app
 tag_doc_term_matrix = tag_vec.transform(trigram_docs, tags)
 
 mod = nimfa.Lsnmf(V=tag_doc_term_matrix, max_iter=200, rank=5)
-nmf_grid = nimfa.Lsnmf.estimate_rank(mod, rank_range=np.arange(2, 14), what=['cophenetic', 'rss'], n_run=10)
+nmf_grid = nimfa.Lsnmf.estimate_rank(mod, rank_range=np.arange(2, 15), what=['cophenetic', 'rss'], n_run=10)
 
 
 fig = plt.figure(figsize=(8,6))
-fig_plt = sns.barplot(x=np.arange(2,14), y=[i['cophenetic'] for i in nmf_grid.values()])
+fig_plt = sns.barplot(x=np.arange(2,15), y=[i['cophenetic'] for i in nmf_grid.values()])
 fig_plt.set_xlabel("N-Components")
 fig_plt.set_ylabel("Cophenetic")
 fig_plt.set_title('Cophenetic Score vs. N-Components')
@@ -228,7 +228,7 @@ fig_plt.get_figure().savefig(figure_directory + "NMF/BM25/TagCophenticScoresLSNM
 
 
 fig = plt.figure(figsize=(8,6))
-fig_plt = sns.barplot(x=np.arange(2,14), y=[i['rss'] for i in nmf_grid.values()])
+fig_plt = sns.barplot(x=np.arange(2,15), y=[i['rss'] for i in nmf_grid.values()])
 fig_plt.set_xlabel("N-Components")
 fig_plt.set_ylabel("RSS")
 fig_plt.set_title('RSS vs. N-Components')
